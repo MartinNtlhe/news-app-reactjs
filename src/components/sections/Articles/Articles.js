@@ -3,12 +3,13 @@ import axios from "axios";
 import alertify from "alertifyjs";
 import Section from '../../../hoc/Section';
 import Loader from 'react-loader-spinner';
+import request from '../../../services/api';
 
-const Articles = () => {
+const Articles = (props) => {
   const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const forceUpdate = useCallback(() => ({}), []);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(null);
   const [articles, setArticles] = useState([]);
 
   const handleArticleDataStructure = (data) => {
@@ -52,11 +53,12 @@ const Articles = () => {
   }
 
   useEffect(() => {
-    axios.get('https://api.nytimes.com/svc/mostpopular/v2/viewed/7.json?api-key=rOBWnkHZ6E8tEc21vxJkJVJPlPnrb0Y7').then( (res) => {
+    setLoading(props)
+    request().then( (res) => {
+      console.log(props.loading)
       if(res){  
         switch (res.status) {
           case 200:
-            setCopyright(res.data.copyright);
             handleArticleDataStructure(res.data.results);
             break;
           case 401:
@@ -79,11 +81,11 @@ const Articles = () => {
     }).catch(function (error) {
       alertify.error(error);
     });	
-  }, [handleArticleDataStructure]);
+  }, [props.loading]);
 
   return (
     loading ?
-      <div id="loadHolder"
+      <div id="loadHolder" className="loadHolder"
         style={{
           opacity: 0.9, backgroundColor:'#ccc',
           width: "100%",
@@ -103,7 +105,7 @@ const Articles = () => {
               articles.map((data, index) => (
                 <div className='col-lg-4 mb-3'>
                   <div className='card rounded-0'>
-                    <img src={data.metadata.length > 0 ? data.metadata : ""} className='card-img-top' alt='Blog 1' />
+                    <img src={data.metadata.length > 0 ? data.metadata : ""} className='card-img-top' alt={'article ' + index} />
                     <div className='card-author'>
                       {data?.author}
                     </div>
@@ -121,11 +123,16 @@ const Articles = () => {
                 </div>
               ))
             ) : (
-              <div className='col-lg-4 mb-3'>
-                <div className='card rounded-0'>
-                  <div className='card-body'>
-                    <h5 className='card-title'>No data to show</h5></div>
-                </div>
+              <div id="loadHolder" className="loadHolder"
+                style={{
+                  opacity: 0.9, backgroundColor:'#ccc',
+                  width: "100%",
+                  height: "100",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}>
+                <Loader type="ThreeDots" color="#2BAD60" height="100" width="100" key="loader"/>
               </div>
             )}
           </div>

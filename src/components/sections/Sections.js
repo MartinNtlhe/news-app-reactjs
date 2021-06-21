@@ -3,7 +3,7 @@ import Articles from './Articles/Articles';
 const sections = () => {
   return (
     <Fragment>
-      <Articles />
+      <Articles loading={true}/>
     </Fragment>
   );
 };

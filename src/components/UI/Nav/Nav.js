@@ -16,7 +16,8 @@ const Nav = () => {
       }
       setNavClass(navClass);
     });
-  }, []);
+  }, [toggeledNav]);
+
   return (
     <nav className={`navbar navbar-expand-md bg-light ${navClass}`}>
       <div className='container'>

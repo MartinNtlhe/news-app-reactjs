@@ -1,43 +1,60 @@
-import React from "react";
-import { render, unmountComponentAtNode } from "react-dom";
-import { act } from "react-dom/test-utils";
+import React from 'react';
+import { render, screen, cleanup, act, } from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
+import { shallow, configure, ShallowWrapper  } from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
 import Articles from "./components/sections/Articles/Articles";
+import axios from 'axios';
 
-var container: Document | Element | DocumentFragment | null = null;
-beforeEach(() => {
-  // setup a DOM element as a render target
-  container = document.createElement("div");
-  document.body.appendChild(container);
-});
+import { fakeArticles } from './services/fakeData';
+import { unmountComponentAtNode } from 'react-dom';
 
-afterEach(() => {
-  // cleanup on exiting
-  unmountComponentAtNode(container);
-  container.remove();
-  container = null;
-});
+configure({ adapter: new Adapter() });
 
-it("renders user data", async () => {
-  const fakeUser = {
-    name: "Joni Baez",
-    age: "32",
-    address: "123, Charming Avenue"
-  };
-  jest.spyOn(global, "fetch").mockImplementation(() =>
-    Promise.resolve({
-      json: () => Promise.resolve(fakeUser)
-    })
-  );
+describe("<Articles />", () => {
 
-  // Use the asynchronous version of act to apply resolved promises
-  await act(async () => {
-    render(<Articles id="123" />, container);
+  let wrapper: ShallowWrapper<any, Readonly<{}>, React.Component<{}, {}, any>>;
+  let container = null;
+  beforeAll(() => {
+    global.fetch = jest.fn();
   });
 
-  expect(container.querySelector("summary").textContent).toBe(fakeUser.name);
-  expect(container.querySelector("strong").textContent).toBe(fakeUser.age);
-  expect(container.textContent).toContain(fakeUser.address);
+  beforeEach(() => {
+    wrapper = shallow(<Articles loading={true}/>, { disableLifecycleMethods: true });
+    
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+  
+  afterEach(() => {
+    wrapper.unmount();
+    
+    unmountComponentAtNode(container);
+    container.remove();
+    container = null;
+  });
 
-  // remove the mock to ensure tests are completely isolated
-  global.fetch.mockRestore();
+  test("Must render a loading view before successful api call", () => {
+    render(<Articles loading={true} />, container);
+    expect(wrapper.find("div.loadHolder").exists()).toBeTruthy();
+  });
+
+  it("must show list of articles and hide the loading view after api call success", (done) => {
+    const navComponent = shallow(<Articles />);
+    expect(navComponent.exists()).toBe(true);
+    render(<Articles loading={false}/>);
+    
+    fetch.mockImplementation(() => {
+      return Promise.resolve({
+        status: 200,
+        json: () => {
+          return Promise.resolve(fakeArticles);
+        }
+      });
+    });
+
+    wrapper.update();
+    fetch.mockClear();
+    done();
+  });
 });
